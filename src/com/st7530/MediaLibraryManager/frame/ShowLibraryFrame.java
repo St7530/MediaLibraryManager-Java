@@ -7,32 +7,50 @@ import com.st7530.MediaLibraryManager.data.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Vector;
 
-import static com.st7530.MediaLibraryManager.Main.res;
+import static com.st7530.MediaLibraryManager.Main.*;
 
 public class ShowLibraryFrame extends JFrame {
-    // 表格控件
-    JTable table = new JTable();
-    // Model
-    DefaultTableModel tableModel = new DefaultTableModel();
 
     public ShowLibraryFrame() {
         super("物品库 - 媒体库管理系统");
+        this.setSize(1100, 400);
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (isChanged) {
+                    int result = JOptionPane.showConfirmDialog(
+                            ShowLibraryFrame.this,
+                            "有更改尚未保存！仍要退出吗？",
+                            "媒体库管理系统",
+                            JOptionPane.YES_NO_OPTION
+                    );
+                    if (result == JOptionPane.YES_OPTION) {
+                        System.exit(0);
+                    }
+                } else {
+                    System.exit(0);
+                }
+            }
+        });
+
         JPanel root = new JPanel();
         root.setLayout(new BorderLayout());
         this.setContentPane(root);
-        this.setSize(1000, 400);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JTable table = new JTable();
+        DefaultTableModel tableModel = new DefaultTableModel();
         table.setFillsViewportHeight(true);
         table.setRowSelectionAllowed(true); // 整行选择
-        table.setModel(this.tableModel);
+        table.setModel(tableModel);
         root.add(new JScrollPane(table), BorderLayout.CENTER); // 滚动条支持
 
+        // 顶部按钮
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout());
         JButton findButton = new JButton("查找物品");
@@ -40,44 +58,50 @@ public class ShowLibraryFrame extends JFrame {
         JButton editButton = new JButton("编辑选中");
         JButton deleteButton = new JButton("删除选中");
         JButton saveLibraryButton = new JButton("保存更改");
+
         findButton.addActionListener(e -> {
-            FindItemFrame findItemFrame = new FindItemFrame();
+            new FindItemFrame().setVisible(true);
         });
         addButton.addActionListener(e -> {
             this.setVisible(false);
-            AddItemFrame addItemFrame = new AddItemFrame();
+            new AddItemFrame().setVisible(true);
         });
         editButton.addActionListener(e -> {
             if (table.getSelectedRow() != -1) {
                 this.setVisible(false);
-                EditItemFrame editItemFrame = new EditItemFrame(table.getSelectedRow());
+                new EditItemFrame(table.getSelectedRow()).setVisible(true);
             }
         });
         deleteButton.addActionListener(e -> {
             int[] rows = table.getSelectedRows();
-            for (int i = rows.length - 1; i >= 0; i--) {
+            for (int i = rows.length - 1; i >= 0; i--) { // 倒序删除，保证索引不变
                 res.remove(rows[i]);
             }
+            isChanged = true;
             this.setVisible(false);
-            ShowLibraryFrame showLibraryFrame = new ShowLibraryFrame();
+            new ShowLibraryFrame().setVisible(true);
         });
         saveLibraryButton.addActionListener(e -> {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new ResourceSerializerModule());
             try {
-                mapper.registerModule(new ResourceSerializerModule());
                 mapper.writerWithDefaultPrettyPrinter().writeValue(new File("Library.json"), res);
+                isChanged = false;
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         });
+
         buttonPanel.add(findButton);
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(saveLibraryButton);
         root.add(buttonPanel, BorderLayout.NORTH);
-        // 表头
+
+        // 中部表格
         tableModel.addColumn("编号");
+        tableModel.addColumn("类型");
         tableModel.addColumn("标题");
         tableModel.addColumn("作者");
         tableModel.addColumn("评级");
@@ -87,41 +111,25 @@ public class ShowLibraryFrame extends JFrame {
 
         int bookCount = 0, vcdCount = 0, pictureCount = 0;
         for (Resource r : res) {
-            // java.util.Vector 类似于 List
-            Vector<Object> rowData = new Vector<>();
-            rowData.add(r.getId());
-            rowData.add(r.getTitle());
-            rowData.add(r.getAuthor());
-            rowData.add(r.getRate());
             switch (r) {
-                case Book book -> {
-                    rowData.add(book.getPress());
-                    rowData.add(book.getIsbn());
-                    rowData.add(book.getPage());
+                case Book book:
                     bookCount++;
-                }
-                case VCD vcd -> {
-                    rowData.add(vcd.getName());
-                    rowData.add(vcd.getYear());
-                    rowData.add(vcd.getPeriod());
+                    break;
+                case VCD vcd:
                     vcdCount++;
-                }
-                case Picture picture -> {
-                    rowData.add(picture.getNation());
-                    rowData.add(picture.getLength());
-                    rowData.add(picture.getWidth());
+                    break;
+                case Picture picture:
                     pictureCount++;
-                }
-                default -> {
-                }
+                    break;
+                default:
+                    break;
             }
-            tableModel.addRow(rowData); // 添加一行
+            tableModel.addRow(r.show());
         }
 
+        // 底部统计数据
         JPanel statsPanel = new JPanel();
         statsPanel.add(new JLabel("总物品数：" + (bookCount + vcdCount + pictureCount) + "，图书数：" + bookCount + "，视频光盘数：" + vcdCount + "，图画数：" + pictureCount));
         root.add(statsPanel, BorderLayout.SOUTH);
-
-        this.setVisible(true);
     }
 }

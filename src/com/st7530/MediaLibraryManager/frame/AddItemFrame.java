@@ -6,27 +6,35 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import static com.st7530.MediaLibraryManager.Main.res;
+import static com.st7530.MediaLibraryManager.Main.*;
 
 public class AddItemFrame extends JFrame {
     public AddItemFrame() {
         super("添加物品 - 媒体库管理系统");
+        this.setSize(320, 350);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                ShowLibraryFrame frame = new ShowLibraryFrame();
+                new ShowLibraryFrame().setVisible(true);
             }
         });
-        this.setSize(320, 350);
 
         JPanel root = new JPanel();
-        this.setContentPane(root);
         root.setLayout(new BorderLayout());
+        this.setContentPane(root);
 
-        // 输入区域
+        // 顶部选择框
+        JPanel typePanel = new JPanel(new FlowLayout());
+        typePanel.add(new JLabel("类型："));
+        JComboBox<String> typeBox = new JComboBox<>(new String[]{"图书", "视频光盘", "图画"});
+        typeBox.setSelectedIndex(-1);
+        typePanel.add(typeBox);
+        root.add(typePanel, BorderLayout.NORTH);
+
+        // 中部输入框
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
-        root.add(inputPanel, BorderLayout.CENTER);
+
         JTextField idField = new JTextField(20);
         JTextField titleField = new JTextField(20);
         JTextField authorField = new JTextField(20);
@@ -41,11 +49,6 @@ public class AddItemFrame extends JFrame {
         JTextField lengthField = new JTextField(20);
         JTextField widthField = new JTextField(20);
 
-        // 顶部选择类型
-        JPanel topPanel = new JPanel(new FlowLayout());
-        JComboBox<String> typeBox;
-        typeBox = new JComboBox<>(new String[]{"图书", "视频光盘", "图画"});
-        typeBox.setSelectedIndex(-1);
         typeBox.addActionListener(e -> {
             inputPanel.removeAll();
             addInputRow(inputPanel, "编号：", idField);
@@ -54,36 +57,35 @@ public class AddItemFrame extends JFrame {
             addInputRow(inputPanel, "评级：", rateField);
             int choice = typeBox.getSelectedIndex();
             switch (choice) {
-                case 0:
+                case 0: // 图书
                     addInputRow(inputPanel, "出版社：", pressField);
                     addInputRow(inputPanel, "ISBN 号：", isbnField);
                     addInputRow(inputPanel, "页数：", pageField);
                     break;
-                case 1:
+                case 1: // 视频光盘
                     addInputRow(inputPanel, "出品者：", nameField);
                     addInputRow(inputPanel, "出品年份：", yearField);
                     addInputRow(inputPanel, "视频时长：", periodField);
                     break;
-                case 2:
+                case 2: // 图画
                     addInputRow(inputPanel, "出口国籍：", nationField);
                     addInputRow(inputPanel, "长：", lengthField);
                     addInputRow(inputPanel, "宽：", widthField);
                     break;
             }
+            isChanged = true;
             inputPanel.revalidate();
             inputPanel.repaint();
         });
-        topPanel.add(new JLabel("选择类型："));
-        topPanel.add(typeBox);
-        root.add(topPanel, BorderLayout.NORTH);
+
+        root.add(inputPanel, BorderLayout.CENTER);
 
         // 底部按钮
-        JButton saveButton = new JButton("添加");
-        root.add(saveButton, BorderLayout.SOUTH);
-        saveButton.addActionListener(e -> {
+        JButton addButton = new JButton("添加");
+        addButton.addActionListener(e -> {
             int choice = typeBox.getSelectedIndex();
             switch (choice) {
-                case 0:
+                case 0: // 图书
                     res.add(new Book(
                             Integer.parseInt(idField.getText()),
                             titleField.getText(),
@@ -94,7 +96,7 @@ public class AddItemFrame extends JFrame {
                             Integer.parseInt(pageField.getText())
                     ));
                     break;
-                case 1:
+                case 1: // 视频光盘
                     res.add(new VCD(
                             Integer.parseInt(idField.getText()),
                             titleField.getText(),
@@ -105,7 +107,7 @@ public class AddItemFrame extends JFrame {
                             Integer.parseInt(periodField.getText())
                     ));
                     break;
-                case 2:
+                case 2: // 图画
                     res.add(new Picture(
                             Integer.parseInt(idField.getText()),
                             titleField.getText(),
@@ -118,13 +120,12 @@ public class AddItemFrame extends JFrame {
                     break;
             }
             this.setVisible(false);
-            ShowLibraryFrame showLibraryFrame = new ShowLibraryFrame();
+            new ShowLibraryFrame().setVisible(true);
         });
-
-        this.setVisible(true);
+        root.add(addButton, BorderLayout.SOUTH);
     }
 
-    private void addInputRow(JPanel panel, String label, JComponent field) {
+    private void addInputRow(JPanel panel, String label, JTextField field) {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
         row.add(new JLabel(label));
         row.add(field);

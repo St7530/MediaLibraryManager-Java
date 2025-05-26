@@ -1,5 +1,7 @@
 package com.st7530.MediaLibraryManager.data;
 
+import java.util.Vector;
+
 public class Book extends Resource {
     private String press; // 出版社
     private String isbn; // ISBN 号
@@ -10,6 +12,20 @@ public class Book extends Resource {
         this.press = press;
         this.isbn = isbn;
         this.page = page;
+    }
+
+    @Override
+    public Vector<Object> show() {
+        Vector<Object> row = new Vector<>();
+        row.add(this.getId());
+        row.add("图书");
+        row.add(this.getTitle());
+        row.add(this.getAuthor());
+        row.add(this.getRate());
+        row.add(this.getPress());
+        row.add(this.getIsbn());
+        row.add(this.getPage());
+        return row;
     }
 
     public Book() {

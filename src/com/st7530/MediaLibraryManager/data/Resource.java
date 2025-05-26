@@ -1,6 +1,8 @@
 package com.st7530.MediaLibraryManager.data;
 
-public class Resource {
+import java.util.Vector;
+
+public abstract class Resource {
     private int id; // 编号
     private String title; // 标题
     private String author; // 作者
@@ -12,6 +14,8 @@ public class Resource {
         this.author = author;
         this.rate = rate;
     }
+
+    public abstract Vector<Object> show();
 
     public Resource() {
     }

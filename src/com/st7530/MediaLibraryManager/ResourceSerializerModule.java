@@ -17,7 +17,6 @@ public class ResourceSerializerModule extends SimpleModule {
     }
 
     private static class ResourceSerializer extends StdSerializer<List<Resource>> {
-        // 无参构造器
         public ResourceSerializer() {
             super((Class<List<Resource>>) (Class<?>) List.class);
         }

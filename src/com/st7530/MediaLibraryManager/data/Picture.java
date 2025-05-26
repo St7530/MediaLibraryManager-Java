@@ -1,5 +1,7 @@
 package com.st7530.MediaLibraryManager.data;
 
+import java.util.Vector;
+
 public class Picture extends Resource {
     private String nation; // 出口国籍
     private int length; // 长
@@ -10,6 +12,20 @@ public class Picture extends Resource {
         this.nation = nation;
         this.length = length;
         this.width = width;
+    }
+
+    @Override
+    public Vector<Object> show() {
+        Vector<Object> row = new Vector<>();
+        row.add(this.getId());
+        row.add("图画");
+        row.add(this.getTitle());
+        row.add(this.getAuthor());
+        row.add(this.getRate());
+        row.add(this.getNation());
+        row.add(this.getLength());
+        row.add(this.getWidth());
+        return row;
     }
 
     public Picture() {
